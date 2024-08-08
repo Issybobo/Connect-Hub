@@ -1,5 +1,6 @@
 const express = require("express");
 const connectDB = require("./database/db");
+const authRoute = require("./routes/auth")
 
 const app = express();
 const dotenv = require("dotenv");
@@ -8,6 +9,8 @@ dotenv.config();
 
 // Add middleware to parse JSON request bodies
 app.use(express.json());
+
+app.use("/api/auth", authRoute)
 
 /*app.get("/", (req, res) => {
   res.send("Hello Worlds");
