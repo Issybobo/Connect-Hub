@@ -1,6 +1,9 @@
 const express = require("express");
 const connectDB = require("./database/db");
+const cookieParser = require("cookie-parser")
 const authRoute = require("./routes/auth")
+const { errorHandler } = require("./middlewares/error")
+
 
 const app = express();
 const dotenv = require("dotenv");
@@ -9,8 +12,11 @@ dotenv.config();
 
 // Add middleware to parse JSON request bodies
 app.use(express.json());
+app.use(cookieParser())
 
 app.use("/api/auth", authRoute)
+
+app.use(errorHandler)
 
 /*app.get("/", (req, res) => {
   res.send("Hello Worlds");
