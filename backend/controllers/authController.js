@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
+const { CustomError } = require("../middlewares/error"); // Correct import
 
 const registerController = async (req, res, next) => {
     try {
@@ -9,7 +10,7 @@ const registerController = async (req, res, next) => {
         // Check if user already exists
         const existingUser = await User.findOne({ $or: [{ username }, { email }] });
         if (existingUser) {
-            throw new CustomError("User or email already exists!", 400)
+            throw new CustomError("User or email already exists!", 400);
         }
 
         // Hash the password
@@ -23,12 +24,10 @@ const registerController = async (req, res, next) => {
         // Respond with the saved user
         res.status(201).json(savedUser);
     } catch (error) {
-        // Handle errors
-       // res.status(500).json({ error: err.message });
-       next(error)
+        console.error("Error in registerController:", error); // Log the error
+        next(error);
     }
 };
-
 
 const loginContoller = async (req, res, next) => {
     try {
@@ -43,8 +42,7 @@ const loginContoller = async (req, res, next) => {
 
         // If user not found
         if (!user) {
-            //return res.status(400).json({ message: "User not found!" });
-            throw new CustomError("User not found!", 404)
+            throw new CustomError("User not found!", 404);
         }
 
         // Compare password in the database with the password the user is trying to login with
@@ -52,8 +50,7 @@ const loginContoller = async (req, res, next) => {
 
         // If passwords don't match
         if (!match) {
-            //return res.status(400).json({ msg: "Invalid credentials!" });
-            throw new CustomError("Invalid credentials!", 401)
+            throw new CustomError("Invalid credentials!", 401);
         }
 
         // Remove password from the user object and create a token
@@ -63,14 +60,10 @@ const loginContoller = async (req, res, next) => {
         // Send the token in a cookie and respond with user data
         res.cookie("token", token).json(data);
     } catch (error) {
-        // Handle errors
-      //  res.status(500).json(error);
-      next(error)
+        console.error("Error in loginContoller:", error); // Log the error
+        next(error);
     }
-
-
-}
-
+};
 
 const logoutController = async (req, res, next) => {
     try {
@@ -78,12 +71,10 @@ const logoutController = async (req, res, next) => {
         res.clearCookie("token", { sameSite: "strict", httpOnly: true });
         res.status(200).json({ msg: "Logout successful!" });
     } catch (error) {
-        // Handle errors
-        res.status(500).json(error);
-        next(error)
+        console.error("Error in logoutController:", error); // Log the error
+        next(error);
     }
-
-}
+};
 
 const refetchController = async (req, res, next) => {
     // Get the token from the cookies
@@ -96,11 +87,7 @@ const refetchController = async (req, res, next) => {
 
         // If there's an error verifying the token, return a 404 status with the error
         if (err) {
-            //return res.status(404).json(err);
-            throw new CustomError(err, 401)
-
-
-        
+            throw new CustomError(err, 401);
         }
 
         try {
@@ -113,12 +100,10 @@ const refetchController = async (req, res, next) => {
             // If the user is found, return the user data with a 200 status
             res.status(200).json(user);
         } catch (error) {
-            // If there's an error during the database query, return a 500 status with the error
-          //  res.status(500).json(error);
-          next(error)
+            console.error("Error in refetchController:", error); // Log the error
+            next(error);
         }
+    });
+};
 
-    })
-}
-
-module.exports = { registerController , loginContoller, logoutController, refetchController};
+module.exports = { registerController, loginContoller, logoutController, refetchController };

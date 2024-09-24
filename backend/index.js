@@ -2,6 +2,7 @@ const express = require("express");
 const connectDB = require("./database/db");
 const cookieParser = require("cookie-parser")
 const authRoute = require("./routes/auth")
+const userRoute = require("./routes/users")
 const { errorHandler } = require("./middlewares/error")
 
 
@@ -15,7 +16,7 @@ app.use(express.json());
 app.use(cookieParser())
 
 app.use("/api/auth", authRoute)
-
+app.use("/api/users", userRoute) // Ensure this line is present
 app.use(errorHandler)
 
 /*app.get("/", (req, res) => {
