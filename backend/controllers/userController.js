@@ -1,6 +1,9 @@
 const express = require("express");
 const { CustomError } = require("../middlewares/error");
 const User = require("../models/User");
+const Post = require("../models/Post");
+const Comment = require("../models/Comment");
+const Story = require("../models/Story");
 
 const getUserController = async (req, res, next) => {
     try {
@@ -242,6 +245,163 @@ const unblockUserController=async(req,res,next)=>{
     }
 }
 
-    
 
-module.exports = { getUserController, updateUserController, followUserController,unfollowUserController,blockUserController,unblockUserController };
+// get blocked users controller
+const getBlockedUsersController=async(req,res,next)=>{
+    //userId of the user to get the blocked users
+    const {userId}=req.params
+    try{
+        //find the user and populate the block list with the username, full name and profile picture
+        const user=await User.findById(userId).populate("blockList","username fullName profilePicture")
+        //if the user is not found
+        if(!user){
+            throw new CustomError("User not found!",404)
+        }
+
+        //get the block list from the user
+        const {blockList,...data}=user
+
+        //send the block list as a response
+        res.status(200).json(blockList)
+
+    }
+    catch(error){
+        next(error)
+    }
+}
+
+
+// delete user controller
+
+const deleteUserController=async(req,res,next)=>{
+    //userId of the user to delete
+    const {userId}=req.params
+
+    try{
+        //find the user to delete
+        const userToDelete=await User.findById(userId)
+
+        //if the user is not found
+        if(!userToDelete){
+            throw new CustomError("User not found!",404)
+        }
+
+        //delete all the posts of the user
+        await Post.deleteMany({user:userId})
+        // delete posts where the user is the commenter
+        await Post.deleteMany({"comments.user":userId})
+        // delete posts where the user is the replier
+        await Post.deleteMany({"comments.replies.user":userId})
+        // delete all the comments of the user
+        await Comment.deleteMany({user:userId})
+        // delete all the stories of the user
+        await Story.deleteMany({user:userId})
+        // delete all the likes of the user
+        await Post.updateMany({likes:userId},{$pull:{likes:userId}})
+        // delete all the followers of the user
+        await User.updateMany(
+            {_id:{$in:userToDelete.following}},
+            {$pull:{followers:userId}})
+        // delete all the likes of the user
+            await Comment.updateMany({},{$pull:{likes:userId}})
+        // delete all the likes of the user in the replies
+        await Comment.updateMany({"replies.likes":userId},{$pull:{"replies.likes":userId}})
+        // delete all the likes of the user in the posts
+        await Post.updateMany({},{$pull:{likes:userId}})
+
+        // delete all the replies of the user
+        const replyComments=await Comment.find({"replies.user":userId})
+            //delete all the replies of the user
+            await Promise.all(
+            replyComments.map(async(comment)=>{
+                comment.replies=comment.replies.filter((reply)=>reply.user.toString()!=userId)
+                await Comment.save()
+            })
+        )
+
+        //delete the user
+        await userToDelete.deleteOne()
+
+        //send a success response
+        res.status(200).json({message:"Everything associated with user is deleted successfully!"})
+
+    }
+    catch(error){
+        next(error)
+    }
+}
+
+
+// search users controller
+const searchUsersController=async(req,res,next)=>{
+    //query to search for
+    const {query}=req.params
+    try{
+        //search for users that match the query
+        const users = await User.find({
+            //search for users that match the query in the username or full name
+            $or:[
+                {"username":{$regex:new RegExp(query,"i")}},
+                {"fullName":{$regex:new RegExp(query,"i")}}
+            ]
+        })
+
+        //send the users as a response
+        res.status(200).json(users)
+    }
+    catch(error){
+        next(error)
+    }
+}
+
+// generate file url controller
+const generateFileUrl=(filename)=>{
+    //generate the file url
+    return process.env.URL+ `/uploads/${filename}`
+}
+
+// update profile picture controller
+const updateProfilePictureController=async(req,res,next)=>{
+    //userId of the user to update the profile picture
+    const {userId}=req.params
+    //profile picture of the user to update
+    const {filename}=req.file
+    try{
+        //update the profile picture of the user
+        const user = await User.findByIdAndUpdate(userId,{profilePicture:generateFileUrl(filename)},{new:true})
+        //if the user is not found
+        if(!user){
+            throw new CustomError("User not found!",404)
+        }
+        //send the updated user as a response
+        res.status(200).json({message:"Profile picture updated successfully!", user})
+    }
+    catch(error){
+        next(error)
+    }
+}
+
+// update cover picture controller
+
+const uploadCoverPictureController=async(req,res,next)=>{
+    //userId of the user to update the cover picture
+    const {userId}=req.params
+    //cover picture of the user to update
+    const {filename}=req.file
+    try{
+        //update the cover picture of the user
+        const user=await User.findByIdAndUpdate(userId,{coverPicture:generateFileUrl(filename)},{new:true})
+        //if the user is not found
+        if(!user){
+            throw new CustomError("User not found!",404)
+        }
+        //send the updated user as a response
+        res.status(200).json({message:"Cover picture updated successfully!",user})
+
+    }
+    catch(error){
+        next(error)
+    }
+}
+
+module.exports = { getUserController, updateUserController, followUserController,unfollowUserController,blockUserController,unblockUserController,getBlockedUsersController,deleteUserController,searchUsersController,updateProfilePictureController, uploadCoverPictureController };

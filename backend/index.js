@@ -3,6 +3,7 @@ const connectDB = require("./database/db");
 const cookieParser = require("cookie-parser")
 const authRoute = require("./routes/auth")
 const userRoute = require("./routes/users")
+const path = require("path")
 const { errorHandler } = require("./middlewares/error")
 
 
@@ -14,6 +15,9 @@ dotenv.config();
 // Add middleware to parse JSON request bodies
 app.use(express.json());
 app.use(cookieParser())
+
+// Add middleware to serve static files from the 'uploads' directory
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/auth", authRoute)
 app.use("/api/users", userRoute) // Ensure this line is present
