@@ -3,6 +3,7 @@ const connectDB = require("./database/db");
 const cookieParser = require("cookie-parser")
 const authRoute = require("./routes/auth")
 const userRoute = require("./routes/users")
+const postRoute = require("./routes/post")
 const path = require("path")
 const { errorHandler } = require("./middlewares/error")
 
@@ -20,7 +21,8 @@ app.use(cookieParser())
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/auth", authRoute)
-app.use("/api/users", userRoute) // Ensure this line is present
+app.use("/api/users", userRoute) 
+app.use("/api/post", postRoute)
 app.use(errorHandler)
 
 /*app.get("/", (req, res) => {

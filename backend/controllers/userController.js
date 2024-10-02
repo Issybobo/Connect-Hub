@@ -365,10 +365,16 @@ const updateProfilePictureController=async(req,res,next)=>{
     //userId of the user to update the profile picture
     const {userId}=req.params
     //profile picture of the user to update
-    const {filename}=req.file
+    const file =req.file
+
+    
+    if (!file) {
+        return next(new CustomError("No file uploaded!", 400));
+    }
+
     try{
         //update the profile picture of the user
-        const user = await User.findByIdAndUpdate(userId,{profilePicture:generateFileUrl(filename)},{new:true})
+        const user = await User.findByIdAndUpdate(userId,{profilePicture:generateFileUrl(file.filename)},{new:true})
         //if the user is not found
         if(!user){
             throw new CustomError("User not found!",404)
@@ -387,10 +393,15 @@ const uploadCoverPictureController=async(req,res,next)=>{
     //userId of the user to update the cover picture
     const {userId}=req.params
     //cover picture of the user to update
-    const {filename}=req.file
+    const file =req.file
+
+    if (!file) {
+        return next(new CustomError("No file uploaded!", 400));
+    }
+
     try{
         //update the cover picture of the user
-        const user=await User.findByIdAndUpdate(userId,{coverPicture:generateFileUrl(filename)},{new:true})
+        const user=await User.findByIdAndUpdate(userId,{coverPicture:generateFileUrl(file.filename)},{new:true})
         //if the user is not found
         if(!user){
             throw new CustomError("User not found!",404)

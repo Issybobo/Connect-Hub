@@ -1,7 +1,7 @@
 // Middleware function to handle errors
 const errorHandler = (err, req, res, next) => {
     // Log the error stack trace to the console for debugging
-    console.error(err.stack);
+    //console.error(err.stack);
 
     // Check if the error is an instance of CustomError
     if (err instanceof CustomError) {
