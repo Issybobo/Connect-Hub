@@ -135,7 +135,7 @@ const getUserPostsController=async(req,res,next)=>{
     }
 }
 
-const deletePostController=async (req,res,next)=>{
+/*const deletePostController=async (req,res,next)=>{
     // get the post id from the params
     const {postId}=req.params
     try{
@@ -147,18 +147,22 @@ const deletePostController=async (req,res,next)=>{
         }
         // find the user by id
         const user=await User.findById(postToDelete.user)
-        // if user not found throw an error
         if(!user){
             throw new CustomError("User not found!",404)
         }
-        // remove the post from the user's posts if it exists con 
+        // // Remove the post with the ID of postToDelete from the user's posts array
+        // remove the post from the user's posts if it exists 
+        // Keep only the posts that do not have the same ID as postToDelete
         user.posts=user.posts.filter(postId=>postId.toString()!==postToDelete._id.toString())
-        // save the user posts
+        
         await user.save()
         // delete the post
-        await postToDelete.deleteOne()
+        //await postToDelete.deleteOne()
         // delete the comments of the post
-        await Comment.deleteMany({post:postId})
+        //await Comment.deleteMany({post:postId})
+
+        // Delete the post
+        await postToDelete.remove();
 
         res.status(200).json({message:"Post deleted successfully!"})
 
@@ -166,7 +170,47 @@ const deletePostController=async (req,res,next)=>{
     catch(error){
         next(error)
     }
-}
+}*/
+
+
+
+const deletePostController = async (req, res, next) => {
+    const { postId } = req.params;
+
+    try {
+       
+
+        // Find the post to delete
+        const postToDelete = await Post.findById(postId);
+        if (!postToDelete) {
+           // throw new CustomError("Post not found!", 404);
+            res.status(404).json({message:"Post not found!"})
+        }
+    
+
+        // Find the user who created the post
+        const user = await User.findById(postToDelete.user);
+        if (!user) {
+            throw new CustomError("User not found!", 404);
+        }
+       
+        // Remove the post from the user's posts array
+        user.posts = user.posts.filter(postId => postId.toString() !== postToDelete._id.toString());
+        await user.save();
+       
+
+        // Delete the post
+        await Post.findByIdAndDelete(postId);
+       
+
+        res.status(200).json({ message: "Post deleted successfully!" });
+    } catch (error) {
+        console.error(`Error deleting post: ${error.message}`);
+       
+    }
+};
+
+
 
 const likePostController=async(req,res,next)=>{
     const {postId}=req.params

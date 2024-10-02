@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser")
 const authRoute = require("./routes/auth")
 const userRoute = require("./routes/users")
 const postRoute = require("./routes/post")
+const commentRoute = require("./routes/comments")
 const path = require("path")
 const { errorHandler } = require("./middlewares/error")
 
@@ -23,6 +24,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/auth", authRoute)
 app.use("/api/users", userRoute) 
 app.use("/api/post", postRoute)
+app.use("/api/comments", commentRoute)
 app.use(errorHandler)
 
 /*app.get("/", (req, res) => {
